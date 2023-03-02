@@ -10,7 +10,7 @@ namespace Sales.API.Data
         {
         }
         public DbSet<Country> Countries { get; set; } // se plularizara
-
+        //Crearle un indice uno a cada país, con el metodo overrride
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
