@@ -1,5 +1,39 @@
-﻿<h3>GenericList</h3>
+﻿
 <!--COMPONENTE GENERICO QUE NOS PERMITE LLENAR CUALQUIER LISTA-->
+
+@typeparam Titem
+
+@if(MyList is null)
+{
+    @if(Loading is null)
+    {
+         <div class="align-items-center">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b9/Youtube_loading_symbol_1_(wobbly).gif">
+        </div>
+    }
+    else
+    {
+        @Loading
+    }
+}
+else if(MyList.Count == 0)
+{
+    @if(NoRecords is null)
+    {
+        <div class="align-items-center">
+            <p>No hay registros para mostrar</p>
+        </div>
+    }
+    else
+    {
+        @NoRecords
+    }
+
+}
+else
+{
+    @Body
+}
 
 @code {
     [Parameter]
@@ -11,4 +45,8 @@
     [Parameter]
     [EditorRequired]
     public RenderFragment Body { get; set; } = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public List<Titem> MyList { get; set; } = null!;
 }
