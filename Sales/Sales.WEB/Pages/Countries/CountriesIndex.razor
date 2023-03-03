@@ -1,0 +1,51 @@
+﻿<!-- Como voy a distinguir esta pagina en mi app -->
+@page "/countries"
+@using Sales.Shared.Entities;
+@using Sales.WEB.Repositories;
+
+
+@inject IRepository repository
+
+<h3>Paises</h3>
+
+@if (Countries is null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th></th>
+                <th>País</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var country in Countries)
+            {
+                <tr>
+                    <td>
+                        <a class="btn btn-warning">Editar</a>
+                        <button class="btn btn-danger">Borrar</button>
+                    </td>
+                    <td>
+                        @country.Name
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+}
+
+@code {
+    public List<Country>? Countries { get; set; }//El ? significa que puede ser nulo
+
+    protected override async Task OnInitializedAsync()
+    {
+        var responseHTTP = await repository.Get<List<Country>>("/api/countries"); //hago un get de paises y la URL es como definimos la ruta
+        Countries = responseHTTP.Response;//Que me guarde en la variable countries, la respuesta http
+    }
+
+}
