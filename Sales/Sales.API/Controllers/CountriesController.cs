@@ -27,15 +27,61 @@ namespace Sales.API.Controllers
         }
 
 
+        //Obtener de forma asincroniza el ID de un SOLO pais
+        // METODO PARA LISTAR UN SOLO PAIS POR SU ID
+        [HttpGet("{id:int}")]//Le pasamos un parámetro al metodo
+        public async Task<IActionResult> GetAsync(int id)
+        {
+            var country = await _context.Countries.FirstOrDefaultAsync(x => x.Id == id);// creo la variable para preguntar si el país existe
+            //Adicional creo una función lambda para preguntar si el id es igual al id que me pasaron como parámetro
+            if(country == null)// Pregunto si el país existe
+            {
+                return NotFound();
+            }
+            return Ok(country); //Retorno el país que encontró
+        }
 
 
-        [HttpPost]
+
+        [HttpPut] //METODO PARA ACTUALIZAR 
+        public async Task<ActionResult> PutAsync(Country country) //Tengo que pasarle los parametros al metodo put, en este caso un país
+        {
+            _context.Update(country); //Le estoy diciendo al metodo que actualice un nuevo país
+            await _context.SaveChangesAsync();
+            return Ok(country); //Le digo que me devuela el país como quedo actualizado
+        }//Task es el void de los asincronos
+         //Action result son todas las respuestas de HTTP
+
+
+
+        [HttpPost] //METODO PARA CREAR 
         public async Task<ActionResult> PostAsync(Country country) //Tengo que pasarle los parametros al metodo post, en este caso un país
         {
             _context.Add(country); //Le estoy diciendo al metodo que inserte un nuevo país
             await _context.SaveChangesAsync();
             return Ok(country); //Le digo que me devuela el país como quedo insertado
         }//Task es el void de los asincronos
-            //Action result son todas las respuestas de HTTP
+         //Action result son todas las respuestas de HTTP
+
+
+        //METODO PARA ELIMINAR UN PAÍS
+        [HttpDelete("{id:int}")]//Le pasamos un parámetro al metodo
+        public async Task<IActionResult> DeleteAsync(int id)
+        {
+            var country = await _context.Countries.FirstOrDefaultAsync(x => x.Id == id);// creo la variable para preguntar si el país existe
+            //Adicional creo una función lambda para preguntar si el id es igual al id que me pasaron como parámetro
+            if (country == null)// Pregunto si el país existe
+            {
+                return NotFound();
+            }
+            _context.Remove(country); //Le estoy diciendo al metodo que elimine el país
+            await _context.SaveChangesAsync();
+
+            return NoContent(); //Respuesta para borrar un país
+        }
+
+
+
+
     }
 }
