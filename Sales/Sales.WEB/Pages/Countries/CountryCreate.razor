@@ -1,0 +1,41 @@
+﻿<!--Le decimos como vamos a navegar -->
+@page "/countries/create"
+<!-- Se inyecta siempre por medio de la interfaz-->
+@inject IRepository repository
+@inject NavigationManager NavigationManager
+<!-- Le inyecto el servicio del SweetAlert-->
+@inject SweetAlertService SweetAlertService
+
+<h3>Crear Pais</h3>
+
+
+<CountryForm @ref="CountryForm" country="country" OnValidSubmit="Create" ReturnAction="Return">
+</CountryForm>
+
+@code {
+    private Country country = new();// Creo una instancia del pais
+    private CountryForm? CountryForm; // Significa que puede ser nulo, el "?"
+
+    //Creo un metodo asincrono porque usa el repositorio
+    private async Task Create()
+    {
+        //Recibe el objeto pais y hacemos las validaciones respectivas
+        var HttpResponse = await repository.Post("/api/countries", country); //Le mandamos como primer parametro la URL del controlador y como segundo, le mandamos el objeto que quiero que se vaya al metodo post
+                                                                             //Pregunto si funciono o no funciono
+        if (HttpResponse.Error)
+        {
+            //leemos el mensaje del error para despues pintarselo al cliente
+            var message = await HttpResponse.GetErrorMessageAsync();
+            await SweetAlertService.FireAsync("Error", message);
+            return;
+        }
+        CountryForm!.FormPostedSuccessfuly = true;
+        //Si no hubo error, uso el navigationManager para enviarlo a la pagina donde yo quiero
+        NavigationManager.NavigateTo("/countries");
+    }
+    private void Return()
+    {
+        //Si llego hasta acá, es porque presiono el botón regresar, entonces lo redirijo hacía donde quiero
+        NavigationManager.NavigateTo("/countries");
+    }
+}

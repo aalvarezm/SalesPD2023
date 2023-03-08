@@ -23,7 +23,7 @@ namespace Sales.WEB.Repositories
 
         public HttpResponseMessage HttpResponseMessage { get; set; }
 
-        public async Task<string?> GetErrorMessage()
+        public async Task<string?> GetErrorMessageAsync()
         {
             if (!Error)//Si el metodo es diferente de error, retorne null, no paso nada
             {

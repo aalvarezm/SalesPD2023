@@ -7,6 +7,14 @@
         Task<HttpResponseWrapper<object>> Post<T>(string url, T model);//Post que no devuelve nada
 
         Task<HttpResponseWrapper<TResponse>> Post<T, TResponse>(string url, T model);//De tipo Tresponse, osea un objeto de tipo respuesta, devuelve una lista
+
+        Task<HttpResponseWrapper<object>> Delete(string url);
+
+        Task<HttpResponseWrapper<object>> Put<T>(string url, T model); //PUT que no devuelve nada
+
+        Task<HttpResponseWrapper<TResponse>> Put<T, TResponse>(string url, T model);//PUT que devuelve un objeto de tipo respuesta 
+
+
     }
     
 }

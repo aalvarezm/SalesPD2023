@@ -58,5 +58,41 @@ namespace Sales.WEB.Repositories
             var respuestaString = await httpResponse.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<T>(respuestaString, jsonSerializerOptions)!;
         }
+
+
+
+        //IMPLEMENTAMOS
+        public async Task<HttpResponseWrapper<object>> Delete(string url)//Como el metodo no devuelve nada
+        {
+            var ResponseHTTP = await _httpClient.DeleteAsync(url);// Eliminamos y esto lo guardamos en la variable
+            return new HttpResponseWrapper<object>(null, !ResponseHTTP.IsSuccessStatusCode,ResponseHTTP);//Devolvemos una respuesta de lo que el metodo devolvió o de lo que el servicio devolvió
+        }
+
+        public async Task<HttpResponseWrapper<object>> Put<T>(string url, T model)// Como el metodo no devuelve nada
+        {
+            var messageJSON = JsonSerializer.Serialize(model);//Serializo el modelo, es decir, coger un objeto y volverlo string
+            var messageContent = new StringContent(messageJSON, Encoding.UTF8, "application/json");//codifico el el modelo de arriba, lo estamos encodificando a UTF-8
+            var responseHTTP = await _httpClient.PutAsync(url, messageContent);//Despues lo mandamos al metodo PostAsync
+            return new HttpResponseWrapper<object>(null, !responseHTTP.IsSuccessStatusCode, responseHTTP);// Devolvemos la respuesta haga o no haga la actualización
+        }
+
+
+        public async Task<HttpResponseWrapper<TResponse>> Put<T, TResponse>(string url, T model)
+        {
+            var messageJSON = JsonSerializer.Serialize(model);//Serializo el modelo, es decir, coger un objeto y volverlo string
+            var messageContent = new StringContent(messageJSON, Encoding.UTF8, "application/json");//codifico el el modelo de arriba, lo estamos encodificando a UTF-8
+            var responseHTTP = await _httpClient.PutAsync(url, messageContent);//Despues lo mandamos al metodo PostAsync
+           // Devolvemos la respuesta haga o no haga la actualización
+
+
+            if (responseHTTP.IsSuccessStatusCode)//Si la respuesta es correcta
+            {
+                var response = await UnserializeAnswer<TResponse>(responseHTTP, _jsonDefaultOptions);//Deserializamos la respuesta
+                return new HttpResponseWrapper<TResponse>(response, false, responseHTTP);//Despues enviamos la respuesta
+            }
+            return new HttpResponseWrapper<TResponse>(default, !responseHTTP.IsSuccessStatusCode, responseHTTP);
+        }
+
+  
     }
 }
