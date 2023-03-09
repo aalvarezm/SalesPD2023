@@ -10,8 +10,23 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<DataContext>(x => x.UseSqlServer("name=LocalConnection")); //inyectarle el string de conexión, sin importar la clase
+builder.Services.AddTransient<Seeddb>();//Uso el transient porque lo necesito inyectar solo una vez y ya
 
 var app = builder.Build();
+
+Seeddb(app);
+
+void Seeddb(WebApplication app)//Inyeccion a mano
+{
+    IServiceScopeFactory? scopedFactory = app.Services.GetService<IServiceScopeFactory>();
+
+    using (IServiceScope? scope = scopedFactory!.CreateScope())
+    {
+        Seeddb? service = scope.ServiceProvider.GetService<Seeddb>();
+        service!.SeedAsync().Wait();//Uso el wait porque esta clase no es asincrona
+    }
+
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

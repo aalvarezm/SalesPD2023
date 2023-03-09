@@ -44,24 +44,63 @@ namespace Sales.API.Controllers
 
 
         [HttpPut] //METODO PARA ACTUALIZAR 
+        //Task es el void de los asincronos
+        //Action result son todas las respuestas de HTTP
         public async Task<ActionResult> PutAsync(Country country) //Tengo que pasarle los parametros al metodo put, en este caso un país
         {
-            _context.Update(country); //Le estoy diciendo al metodo que actualice un nuevo país
-            await _context.SaveChangesAsync();
-            return Ok(country); //Le digo que me devuela el país como quedo actualizado
-        }//Task es el void de los asincronos
-         //Action result son todas las respuestas de HTTP
+            try
+            {
+                _context.Update(country);//Le estoy diciendo al metodo que actualice un nuevo país
+                await _context.SaveChangesAsync();//Le digo que me devuela el país como quedo actualizado
+                return Ok(country);
+            }
+            catch (DbUpdateException DbUpdateException)//Hubo un error en la actualizacion de datos
+            {
+                //Capturo el error de la db donde le digo que si el mensaje de error contiene la palabra duplicate
+                if (DbUpdateException.InnerException!.Message.Contains("duplicate"))
+                {
+                    //Le retorno un badrequest pero personalizado
+                    return BadRequest("Ya existe un pais con el mismo nombre");
+                }
+                return BadRequest(DbUpdateException.Message);
+
+            }
+            catch (Exception ex)//CATCH para capturar si es otro cualquier mensaje de error, capture pero en el objeto ex
+            {
+                return BadRequest(ex.Message);
+            }
+        }
 
 
 
         [HttpPost] //METODO PARA CREAR 
+        //Task es el void de los asincronos
+        //Action result son todas las respuestas de HTTP
         public async Task<ActionResult> PostAsync(Country country) //Tengo que pasarle los parametros al metodo post, en este caso un país
         {
-            _context.Add(country); //Le estoy diciendo al metodo que inserte un nuevo país
-            await _context.SaveChangesAsync();
-            return Ok(country); //Le digo que me devuela el país como quedo insertado
-        }//Task es el void de los asincronos
-         //Action result son todas las respuestas de HTTP
+            try
+
+            {
+                _context.Add(country);//Le estoy diciendo al metodo que inserte un nuevo país
+                await _context.SaveChangesAsync();
+                return Ok(country);//Le digo que me devuela el país como quedo insertado
+            }
+
+            catch (DbUpdateException DbUpdateException)//Hubo un error en la actualizacion de datos
+            {
+                //Capturo el error de la db donde le digo que si el mensaje de error contiene la palabra duplicate
+                if (DbUpdateException.InnerException!.Message.Contains("duplicate"))
+                {
+                    //Le retorno un badrequest pero personalizado
+                    return BadRequest("Ya existe un pais con el mismo nombre");
+                }
+                return BadRequest(DbUpdateException.Message);
+                
+            }
+            catch(Exception ex)//CATCH para capturar si es otro cualquier mensaje de error, capture pero en el objeto ex
+            {return BadRequest(ex.Message);
+            }
+        }
 
 
         //METODO PARA ELIMINAR UN PAÍS

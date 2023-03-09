@@ -26,7 +26,7 @@
         {
             //leemos el mensaje del error para despues pintarselo al cliente
             var message = await HttpResponse.GetErrorMessageAsync();
-            await SweetAlertService.FireAsync("Error", message);
+            await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
             return;
         }
         CountryForm!.FormPostedSuccessfuly = true;
