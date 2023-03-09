@@ -1,0 +1,82 @@
+﻿
+<!-- Le indico a este componente como navegar allí-->
+<!-- Agrego el id del pais que debo de editar, se debe de enviar como parametro-->
+@page "/countries/Edit/{Id:int}"
+@inject IRepository repository 
+<!-- Inyecto el navigation para poder navegar entre las paginas-->
+@inject NavigationManager NavigationManager 
+<!-- Inyecto el sweetalert para mostrarle los mensajes al cliente de mejor forma-->
+@inject SweetAlertService SweetAlertService
+
+
+<h3>Editar Pais</h3>
+<!--Pregunto si el pais ya llego o sigue nulo al momento de ingresar a la pagina web-->
+@if(country is null){
+    <p>Cargando...</p>
+}
+else
+{
+    //En caso contrario de que si haya llegado el pais
+    //Recordar que el OnValidSubmit valida los data annotations que cree 
+    <!--Referencio el objeto CountryForm con su propiedad-->
+    <CountryForm @ref ="countryForm" country ="country" OnValidSubmit="EditAsync" ReturnAction="Return">
+
+    </CountryForm>
+}
+
+@code {
+    private Country? country;//Cuando le inyecto el repositorio, creo la propiedad de tipo country
+                             //Necesito referencia el objeto CountryForm por codigo, creo una propiedad
+
+    public CountryForm? countryForm;
+
+    //Si arriba envio un parametro por la URL, acá debo de crearlo también
+    [Parameter]
+    public int Id { get; set; }
+
+    //Recupero el pais de la base de datos, uso el metodo asincrono
+    protected override async Task OnInitializedAsync()
+    {
+        //Consumo el repositorio
+        var responseHTTP = await repository.Get<Country>($"/api/countries/{Id}"); //Traeme el get del pais, interpolamos para obtener el Id
+
+        //Valido dos escenarios, que el cliente por URL agregue el Id pais 80 y este no exista o que en la app web dos usuarios estan viendo el mismo pais, pero uno lo elimina y el otro intenta editarlo, por eso se hace este if
+        if (responseHTTP.Error)
+        {
+            //Valido si existe el pais
+            if(responseHTTP.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+            {
+                //No puedo editar un pais que no existe, devuelvo al cliente al listado de paises
+                NavigationManager.NavigateTo("/countries");
+                return;
+            }
+            //Debo de leer el mensaje de error
+            var message = await responseHTTP.GetErrorMessageAsync();
+            await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error); //Uso el FireAsync para mostrarle al cliente el error, donde los parametros son, el mensaje Error, lo que dice el error y el icono del error
+            return;
+        }
+        country = responseHTTP.Response; //No debo de castearlo porque el sabe que devuelve un objeto de tipo pais, por eso se hizo generico
+
+
+    }
+    //Creo los metodo que estoy llamando en el countryForm
+    private async Task EditAsync() //El task es el void de los asincronos
+    {
+        var responseHTTP = await repository.Put("/api/countries", country); //Le mando al metodo put dos parametros, la ruta y el objeto que debo de actualizar
+        if (responseHTTP.Error)
+        {
+            var message = await responseHTTP.GetErrorMessageAsync();
+            await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+        countryForm!.FormPostedSuccessfuly = true;
+        NavigationManager.NavigateTo("/countries");//Lo devuelve al index
+    }
+
+    private void Return()
+    {
+        countryForm!.FormPostedSuccessfuly = true;
+        NavigationManager.NavigateTo("/countries");//Lo devuelve al index
+    }
+
+}

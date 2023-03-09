@@ -2,9 +2,10 @@
 @page "/countries"
 @using Sales.Shared.Entities;
 @using Sales.WEB.Repositories;
-
-
+<!--Inyecto la clase IRepository para el ELIMINAR-->
 @inject IRepository repository
+@inject SweetAlertService SweetAlertService
+@inject NavigationManager NavigationManager
 
 <h3>Paises</h3>
 <a class="btn btn-primary mb-3" href="countries/create">Nuevo Pais</a>
@@ -23,8 +24,8 @@
                 {
                     <tr>
                         <td>
-                            <a class="btn btn-warning">Editar</a>
-                            <button class="btn btn-danger">Borrar</button>
+                            <a class="btn btn-warning" href="/countries/Edit/@country.Id">Editar</a> <!--Lo mando al editar y lo mando con el código del pais-->
+                            <button class="btn btn-danger" @onclick=@(() => DeleteAsync(country.Id))>Borrar</button> <!--Usamos funcion anonima-->
                         </td>
                         <td>
                             @country.Name
@@ -43,8 +44,51 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadAsync();
+    }
+
+    //Hago una temprana para que el sistema recargue la pagina cuando se elimina un registro para que actualice la lista de paises
+    private async Task LoadAsync()
+    {
         var responseHTTP = await repository.Get<List<Country>>("/api/countries"); //hago un get de paises y la URL es como definimos la ruta
         Countries = responseHTTP.Response;//Que me guarde en la variable countries, la respuesta http
+
+    }
+
+
+    private async Task DeleteAsync(int id)//Le paso como parametro el pais que quiero eliminar
+    {
+        var result = await SweetAlertService.FireAsync(new SweetAlertOptions
+            { //Le mando el objeto SweetAlertOptions
+                Title = "Confirmacion",
+                Text = "Esta seguro que desea eliminar este pais?",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = true,
+                CancelButtonText = "No",
+                ConfirmButtonText = "Si"
+            });
+
+        //Almaceno la confirmacion del usuario
+        var confirm = string.IsNullOrEmpty(result.Value);//Significa que el usuario presiono que no
+        if (confirm)
+        {
+            return;
+        }
+        //Pero si el usuario dice que si
+        var responseHTTP = await repository.Delete($"api/countries/{id}");
+        if (responseHTTP.Error)//Si el servidor devolvio un error
+        {
+            if(responseHTTP.HttpResponseMessage.StatusCode != HttpStatusCode.NotFound)//Pregunto si el error es diferente a que el pais no existe
+            {
+                var message = await responseHTTP.GetErrorMessageAsync();
+                await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+                return;
+            }
+        }
+
+        await LoadAsync(); //Llamo el metodo para que recargue la pagina apenas elimine el registro
+
+        
     }
 
 }

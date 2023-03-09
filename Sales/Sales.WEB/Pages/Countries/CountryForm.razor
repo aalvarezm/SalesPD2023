@@ -1,4 +1,6 @@
-﻿@inject SweetAlertService SweetAlertService
+﻿<!-- Este es un componente generico-->
+
+@inject SweetAlertService SweetAlertService
 
 <NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation">
     <!-- Componente que permite bloquear que el usuario no se cambie de ventana, sin antes haber preguntado si desea guardar los cambios-->
@@ -52,7 +54,7 @@
     }
 
     //Creamos el metodo asincrono del OnBeforeInternalNavigation
-    private asyn Task OnBeforeInternalNavigation(LocationChangingContext context)
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
         var FormWasModified = EditContext.IsModified(); //Me dice si el form fue modificado o no
 
@@ -66,15 +68,15 @@
             { //Le mando el objeto SweetAlertOptions
                 Title = "Confirmacion",
                 Text = "Deseas abandonar la pagína sin guardar los cambios?",
-                Icon = SweetAlertIcon.Warning,
+                Icon = SweetAlertIcon.Question,
                 ShowCancelButton = true,
                 CancelButtonText = "No",
                 ConfirmButtonText = "Si"
             });
 
         //Almaceno la confirmacion del usuario
-        var confirm = !string.IsnullOrEmpty(result.value);//Significa que el usuario presiono que si 
-        if(confirm){
+        var confirm = !string.IsNullOrEmpty(result.Value);//Significa que el usuario presiono que si 
+        if(confirm){ 
             return;
         }
 

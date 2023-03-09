@@ -19,7 +19,7 @@
     //Creo un metodo asincrono porque usa el repositorio
     private async Task Create()
     {
-        //Recibe el objeto pais y hacemos las validaciones respectivas
+        //Recibe el objeto pais y hacemos las validaciones respectivas 
         var HttpResponse = await repository.Post("/api/countries", country); //Le mandamos como primer parametro la URL del controlador y como segundo, le mandamos el objeto que quiero que se vaya al metodo post
                                                                              //Pregunto si funciono o no funciono
         if (HttpResponse.Error)
@@ -35,7 +35,9 @@
     }
     private void Return()
     {
+
         //Si llego hasta acá, es porque presiono el botón regresar, entonces lo redirijo hacía donde quiero
+        CountryForm!.FormPostedSuccessfuly = true;
         NavigationManager.NavigateTo("/countries");
     }
 }
