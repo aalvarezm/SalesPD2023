@@ -1,0 +1,128 @@
+﻿@inject IRepository repository
+@page "/countries/Details/{Id:int}"
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlertService
+
+
+@if (country is null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <h3>@country.Name</h3>
+    <div class="mb-2">
+        <a class="btn btn-primary" href="/states/create/@country.Id">Nuevo Estado</a> <!--Le envio como parametro padre, el pais al que pertenece ese estado-->
+        <a class="btn btn-success" href="/countries">Regresar</a>
+    </div>
+
+    <GenericList MyList="country.States!.ToList()">
+        <Body>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Estado</th> 
+                        <th>Ciudades</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var state in country.States!.ToList()!)//Recorro la lista de estados y la muestro en pantalla con los botones de editar y borrar
+                    {
+                        <tr>
+
+                            <td>
+                                @state.Name
+                            </td>
+                            <td>
+                                @state.CitiesNumbers
+                            </td>
+                            <td>
+                                <a class="btn btn-info" href="/States/Details/@state.Id">Detalles</a>
+                                <a class="btn btn-warning" href="/States/Edit/@state.Id">Editar</a> <!--Lo mando al editar y lo mando con el código del estado-->
+                                <button class="btn btn-danger" @onclick=@(() => DeleteAsync(state.Id))>Borrar</button> <!--Usamos funcion anonima-->
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </Body>
+    </GenericList>
+
+}
+
+
+
+@code {
+    //PRIMERO ATRIBUTOS PRIVADOS, LUEGO PROPIEDADES PUBLICAS
+    private Country? country;
+
+
+    //Como en el generic list no me permite rutear con el objeto country.states, creo una propiedad de tipo list de estados
+
+    //Uno va inyectando lo que va necesitando
+    //El @page es para indicarle al componente como o de que forma navego hasta acá
+    //Si arriba en el @page recibo la propieda Id, debo de agregarla como parametro acá
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+
+    }
+
+    private async Task LoadAsync()
+    {
+        var responseHTTP = await repository.Get<Country>($"/api/countries/{Id}");
+        if (responseHTTP.Error)
+        {
+            if (responseHTTP.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+            {
+                NavigationManager.NavigateTo("/countries");
+                return;
+            }
+
+            var message = await responseHTTP.GetErrorMessageAsync();
+            await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+        country = responseHTTP.Response;
+    }
+
+
+
+    private async Task DeleteAsync(int id)//Le paso como parametro el pais que quiero eliminar
+    {
+        var result = await SweetAlertService.FireAsync(new SweetAlertOptions
+            { //Le mando el objeto SweetAlertOptions
+                Title = "Confirmacion",
+                Text = "Esta seguro que desea eliminar este pais?",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = true,
+                CancelButtonText = "No",
+                ConfirmButtonText = "Si"
+            });
+
+        //Almaceno la confirmacion del usuario
+        var confirm = string.IsNullOrEmpty(result.Value);//Significa que el usuario presiono que no
+        if (confirm)
+        {
+            return;
+        }
+        //Pero si el usuario dice que si
+        var responseHTTP = await repository.Delete($"api/states/{id}");
+        if (responseHTTP.Error)//Si el servidor devolvio un error
+        {
+            if (responseHTTP.HttpResponseMessage.StatusCode != HttpStatusCode.NotFound)//Pregunto si el error es diferente a que el pais no existe
+            {
+                var message = await responseHTTP.GetErrorMessageAsync();
+                await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+                return;
+            }
+        }
+
+        await LoadAsync(); //Llamo el metodo para que recargue la pagina apenas elimine el registro
+
+
+    }
+}

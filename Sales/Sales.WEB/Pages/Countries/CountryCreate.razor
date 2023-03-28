@@ -9,7 +9,7 @@
 <h3>Crear Pais</h3>
 
 
-<CountryForm @ref="CountryForm" country="country" OnValidSubmit="Create" ReturnAction="Return">
+<CountryForm @ref="CountryForm" country="country" OnValidSubmit="CreateAsync" ReturnAction="Return">
 </CountryForm>
 
 @code {
@@ -17,7 +17,7 @@
     private CountryForm? CountryForm; // Significa que puede ser nulo, el "?"
 
     //Creo un metodo asincrono porque usa el repositorio
-    private async Task Create()
+    private async Task CreateAsync()
     {
         //Recibe el objeto pais y hacemos las validaciones respectivas 
         var HttpResponse = await repository.Post("/api/countries", country); //Le mandamos como primer parametro la URL del controlador y como segundo, le mandamos el objeto que quiero que se vaya al metodo post

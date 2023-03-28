@@ -23,12 +23,57 @@ namespace Sales.API.Data
         //Metodo que valida 
         private async Task CheckCountriesAsync()
         {
-            if(!_context.Countries.Any())//El metodo Any devuelve true si al menos hay algun registro, entonces lo niego para decir "Si no hay registros..."
+            if (!_context.Countries.Any())//El metodo Any devuelve true si al menos hay algun registro, entonces lo niego para decir "Si no hay registros..."
             {
                 //Adicionamos paises hardcodeados o quemados
-                _context.Countries.Add(new Country { Name = "Colombia" });
+
+                //Agrego al seeder también estados y ciudades, no lo pienso como tablas de una BD, si no como objetos
+                //Es como si paises, estados y ciudades fueran un solo objeto
+                _context.Countries.Add(new Country
+                {
+                    Name = "Colombia",
+                    States = new List<State> {
+                        new State {
+                            Name="Antioquia",
+                            Cities = new List<City>
+                            {
+                                new City{ Name = "Medellín"},
+                                new City{ Name = "Sabaneta"},
+                                new City{ Name = "Envigado"},
+
+                            }
+                        },
+                        new State {
+                            Name="Santander",
+                            Cities = new List<City>
+                            {
+                                new City{ Name = "Cimitarra"},
+                                new City{ Name = "Girón"},
+                                new City{ Name = "Bucaramanga"},
+                            }
+                        },
+                        new State {
+                            Name="Boyacá"
+                        }
+                    }
+                });
                 _context.Countries.Add(new Country { Name = "Brasil" });
-                _context.Countries.Add(new Country { Name = "Argentina" });
+                _context.Countries.Add(new Country
+                {
+                    Name = "Argentina",
+                    States = new List<State>
+                    {
+                        new State
+                        {
+                            Name="Mar del plata",
+                            Cities = new List<City>
+                            {
+                                new City{Name="Buenos Aires"},
+                                new City{Name="San Lorenzo"},
+                            }
+                        }
+                    }
+                });
                 _context.Countries.Add(new Country { Name = "Perú" });
                 await _context.SaveChangesAsync();
             }

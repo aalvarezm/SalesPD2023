@@ -1,0 +1,74 @@
+﻿@page "/States/Edit/{StateId:int}"
+@inject IRepository repository
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlertService
+
+<h3>Editar estado</h3>
+
+@if (state is null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    //En caso contrario de que si haya llegado el pais
+    //Recordar que el OnValidSubmit valida los data annotations que cree
+    <!--Referencio el objeto CountryForm con su propiedad-->
+    <StateForm @ref="stateform" state="state" OnValidSubmit="EditAsync" ReturnAction="Return">
+
+    </StateForm>
+}
+
+@code {
+    private State? state;
+    private StateForm? stateform;
+
+    [Parameter]
+    public int StateId { get; set; }
+
+    //Con el metodo override OnInitializedAsync vamnos a buscar el estado
+
+    protected override async Task OnInitializedAsync()
+    {
+        //Consumo el repositorio
+        var responseHTTP = await repository.Get<State>($"/api/states/{StateId}"); 
+
+        if (responseHTTP.Error)
+        {
+            
+            if (responseHTTP.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+            {
+                
+                NavigationManager.NavigateTo("/countries");
+                return;
+            }
+            
+            var message = await responseHTTP.GetErrorMessageAsync();
+            await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error); 
+            return;
+        }
+        state = responseHTTP.Response; //No debo de castearlo porque el sabe que devuelve un objeto de tipo pais, por eso se hizo generico
+
+    }
+
+    private async Task EditAsync() //El task es el void de los asincronos
+    {
+        var responseHTTP = await repository.Put("/api/states", state); //Le mando al metodo put dos parametros, la ruta y el objeto que debo de actualizar
+        if (responseHTTP.Error)
+        {
+            var message = await responseHTTP.GetErrorMessageAsync();
+            await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+        //Si se realizo el proceso correctamente, retornamos al cloente al detalle del pais
+        stateform!.FormPostedSuccessfuly = true;
+        NavigationManager.NavigateTo($"/countries/details/{state!.CountryId}");
+    }
+
+    private void Return()
+    {
+        stateform!.FormPostedSuccessfuly = true;
+        NavigationManager.NavigateTo($"/countries/details/{state!.CountryId}");
+    }
+}
+

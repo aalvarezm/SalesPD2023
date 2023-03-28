@@ -1,0 +1,72 @@
+﻿@page "/cities/Edit/{cityId:int}"
+@inject IRepository repository
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlertService
+
+<h3>Editar Ciudad</h3>
+
+@if (city is null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+
+    <CityForm @ref="CityForm" city="city" OnValidSubmit="EditAsync" ReturnAction="Return">
+
+    </CityForm>
+}
+
+@code {
+    private City? city;
+    private CityForm? CityForm;
+
+    [Parameter]
+    public int cityId { get; set; }
+
+    //Con el metodo override OnInitializedAsync vamnos a buscar el estado
+
+    protected override async Task OnInitializedAsync()
+    {
+        //Consumo el repositorio
+        var responseHTTP = await repository.Get<City>($"/api/cities/{cityId}");
+
+        if (responseHTTP.Error)
+        {
+
+            if (responseHTTP.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+            {
+
+                NavigationManager.NavigateTo("/countries");
+                return;
+            }
+
+            var message = await responseHTTP.GetErrorMessageAsync();
+            await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+        city = responseHTTP.Response;
+
+    }
+
+    private async Task EditAsync() //El task es el void de los asincronos
+    {
+        var responseHTTP = await repository.Put("/api/cities", city); //Le mando al metodo put dos parametros, la ruta y el objeto que debo de actualizar
+        if (responseHTTP.Error)
+        {
+            var message = await responseHTTP.GetErrorMessageAsync();
+            await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+        //Si se realizo el proceso correctamente, retornamos al cloente al detalle del pais
+        CityForm!.FormPostedSuccessfuly = true;
+        NavigationManager.NavigateTo($"/states/details/{city!.StateId}");
+    }
+
+    private void Return()
+    {
+        CityForm!.FormPostedSuccessfuly = true;
+        NavigationManager.NavigateTo($"/states/details/{city!.StateId}");
+    }
+}
+

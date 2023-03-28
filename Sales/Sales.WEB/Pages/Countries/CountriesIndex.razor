@@ -15,20 +15,25 @@
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th></th>
                     <th>País</th>
+                    <th>Estados / Departamentos</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var country in Countries!)//Recorro la lista de paises y la muestro en pantalla con los botones de editar y borrar
                 {
                     <tr>
-                        <td>
-                            <a class="btn btn-warning" href="/countries/Edit/@country.Id">Editar</a> <!--Lo mando al editar y lo mando con el código del pais-->
-                            <button class="btn btn-danger" @onclick=@(() => DeleteAsync(country.Id))>Borrar</button> <!--Usamos funcion anonima-->
-                        </td>
+
                         <td>
                             @country.Name
+                        </td>
+                        <td>
+                            @country.StatesNumbers
+                        </td>
+                        <td>
+                            <a class="btn btn-info" href="/countries/Details/@country.Id">Detalles</a>
+                            <a class="btn btn-warning" href="/countries/Edit/@country.Id">Editar</a> <!--Lo mando al editar y lo mando con el código del pais-->
+                            <button class="btn btn-danger" @onclick=@(() => DeleteAsync(country.Id))>Borrar</button> <!--Usamos funcion anonima-->
                         </td>
                     </tr>
                 }
@@ -78,17 +83,17 @@
         var responseHTTP = await repository.Delete($"api/countries/{id}");
         if (responseHTTP.Error)//Si el servidor devolvio un error
         {
-            if(responseHTTP.HttpResponseMessage.StatusCode != HttpStatusCode.NotFound)//Pregunto si el error es diferente a que el pais no existe
+            if (responseHTTP.HttpResponseMessage.StatusCode != HttpStatusCode.NotFound)//Pregunto si el error es diferente a que el pais no existe
             {
                 var message = await responseHTTP.GetErrorMessageAsync();
                 await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
                 return;
             }
-        } 
+        }
 
         await LoadAsync(); //Llamo el metodo para que recargue la pagina apenas elimine el registro
 
-        
+
     }
 
 }

@@ -1,0 +1,43 @@
+﻿<!--Le decimos como vamos a navegar -->
+@page "/states/create/{CountryId:int}"
+<!-- Se inyecta siempre por medio de la interfaz-->
+@inject IRepository repository
+@inject NavigationManager NavigationManager
+<!-- Le inyecto el servicio del SweetAlert-->
+@inject SweetAlertService SweetAlertService
+
+<h3>Crear Estado</h3>
+
+
+<StateForm @ref="StateForm" state="state" OnValidSubmit="CreateAsync" ReturnAction="Return">
+</StateForm>
+
+@code {
+    private State state = new();
+    private StateForm? StateForm; 
+    [Parameter]
+    public int CountryId { get; set; }
+
+    private async Task CreateAsync()
+    {
+        state.CountryId = CountryId; //Igualo el state.CountryId con el CountryId que recibi como parametro
+        var HttpResponse = await repository.Post("/api/states", state); 
+        if (HttpResponse.Error)
+        {
+            
+            var message = await HttpResponse.GetErrorMessageAsync();
+            await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+        StateForm!.FormPostedSuccessfuly = true;
+        
+        NavigationManager.NavigateTo($"/countries/Details/{CountryId}");//IMPORTANTE el botón retornar hace que lo envíe al detalle del pais de la propiedad que se definio como entera "country.Id"
+    }
+    private void Return()
+    {
+
+        //Si llego hasta acá, es porque presiono el botón regresar, entonces lo redirijo hacía donde quiero
+        StateForm!.FormPostedSuccessfuly = true;
+        NavigationManager.NavigateTo($"/countries/Details/{CountryId}");
+    }
+}

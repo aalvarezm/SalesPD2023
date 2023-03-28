@@ -1,0 +1,88 @@
+﻿<!-- Este es un componente generico-->
+@inject SweetAlertService SweetAlertService
+
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation">
+    <!-- Componente que permite bloquear que el usuario no se cambie de ventana, sin antes haber preguntado si desea guardar los cambios-->
+
+</NavigationLock>
+
+
+
+<EditForm EditContext="EditContext" OnValidSubmit="OnValidSubmit">
+    <!-- Debemos de pasarle el modelo sobre el cual se va a basar-->
+    <DataAnnotationsValidator />
+    <!--Valido los data annotations del pais-->
+    <div class="mb-3">
+        <label>Estado:</label>
+        <div>
+            <InputText class="form-control" @bind-Value="@state.Name"></InputText> <!-- Bindeamos el objeto para la propiedad name-->
+            <ValidationMessage For="@(() => state.Name)">
+                <!-- Usamos for para usar una funcion anonima-->
+
+            </ValidationMessage> <!-- Validar el error-->
+        </div>
+
+    </div>
+    <button class="btn btn-primary" type="submit">Guardar cambios</button> <!-- De tipo submit porque es quien dispara la accion-->
+    <button class="btn btn-success" @onclick="ReturnAction">Regresar</button>
+</EditForm>
+
+@code {
+    private EditContext EditContext = null!; //Nos permitirá editar el contexto
+
+    [Parameter]
+    [EditorRequired]
+    public State state { get; set; } = null!; //Creamos el parametro de tipo country, para la validación que no puede ser nulo
+
+    //El codigo de las acciones sea pasado como parametros
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback OnValidSubmit { get; set; } //Creamos el parametro de tipo EventCallBack
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback ReturnAction { get; set; }//Evento y parametro para cuando el usuario presione el botón regresar
+
+    //Variable que nos dice si el formulario fue posteado o no
+    public bool FormPostedSuccessfuly { get; set; }
+
+
+    protected override void OnInitialized()
+    {
+        EditContext = new(state);
+    }
+
+    //Creamos el metodo asincrono del OnBeforeInternalNavigation
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var FormWasModified = EditContext.IsModified(); //Me dice si el form fue modificado o no
+
+        //Preguntamos si el form fue editado
+        if (!FormWasModified || FormPostedSuccessfuly)
+        {//Pregunto si el formulario NO fue modificado o FUE POSTEADO de forma exitosa
+            return;
+        }
+        //Si llego aquí es porque no ha terminado de diligenciar el form
+        var result = await SweetAlertService.FireAsync(new SweetAlertOptions
+            { //Le mando el objeto SweetAlertOptions
+                Title = "Confirmacion",
+                Text = "Deseas abandonar la pagína sin guardar los cambios?",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = true,
+                CancelButtonText = "No",
+                ConfirmButtonText = "Si"
+            });
+
+        //Almaceno la confirmacion del usuario
+        var confirm = !string.IsNullOrEmpty(result.Value);//Significa que el usuario presiono que si
+        if (confirm)
+        {
+            return;
+        }
+
+        context.PreventNavigation(); //Impide la navegacion al usuario
+    }
+
+
+}

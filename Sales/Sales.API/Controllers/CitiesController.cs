@@ -7,37 +7,23 @@ namespace Sales.API.Controllers
 {
     //Defino a través del data annotations que esta clase es un controlador
     [ApiController]
-    [Route("/api/countries")] //Rutear para llamar al controlador
-    public class CountriesController: ControllerBase
+    [Route("/api/cities")] //Rutear para llamar al controlador
+    public class CitiesController : ControllerBase
     {
         private readonly DataContext _context;
 
-        public CountriesController(DataContext context) //Le inyecto el datacontext
+        public CitiesController(DataContext context)//Le inyectamos el datacontex
         {
-            _context = context; //Refactorizo, para mi context es llamar toda la base de datos, se llama la instancia
-            
+            _context = context;
         }
-
 
         //Obtener de forma asincroniza el listado de paises 
         [HttpGet]
         public async Task<IActionResult> GetAsync()
         {
-            return Ok(await _context.Countries
-                .Include(x => x.States) //Esto es equivalente "select * from paises INNER JOIN states 
-                .ToListAsync());
+            return Ok(await _context.Cities.ToListAsync());
         }
 
-        //Aplico sobrecarga al metodo get y RECORDAR poner la ruta para poder distinguirlo del otro get
-        [HttpGet("full")]
-        public async Task<IActionResult> GetFullAsync()
-        {
-            return Ok(await _context.Countries
-                .Include(x => x.States!)//Esto es equivalente "select * from paises INNER JOIN states"
-                .ThenInclude(x => x.Cities)//Esto es equivalente "select * from paises INNER JOIN states INNE JOIN Cities", se crea una relación de doble nivel
-                .ToListAsync());
-        }
-        //El primero es include, el resto es ThenInclude
 
 
         //Obtener de forma asincroniza el ID de un SOLO pais
@@ -45,16 +31,13 @@ namespace Sales.API.Controllers
         [HttpGet("{id:int}")]//Le pasamos un parámetro al metodo
         public async Task<IActionResult> GetAsync(int id)
         {
-            var country = await _context.Countries
-                .Include(x => x.States!)
-                .ThenInclude(x => x.Cities)
-                .FirstOrDefaultAsync(x => x.Id == id);// creo la variable para preguntar si el país existe
+            var City = await _context.Cities.FirstOrDefaultAsync(x => x.Id == id);// creo la variable para preguntar si el país existe
             //Adicional creo una función lambda para preguntar si el id es igual al id que me pasaron como parámetro
-            if(country == null)// Pregunto si el país existe
+            if (City == null)// Pregunto si el país existe
             {
                 return NotFound();
             }
-            return Ok(country); //Retorno el país que encontró
+            return Ok(City); //Retorno el país que encontró
         }
 
 
@@ -62,13 +45,13 @@ namespace Sales.API.Controllers
         [HttpPut] //METODO PARA ACTUALIZAR 
         //Task es el void de los asincronos
         //Action result son todas las respuestas de HTTP
-        public async Task<ActionResult> PutAsync(Country country) //Tengo que pasarle los parametros al metodo put, en este caso un país
+        public async Task<ActionResult> PutAsync(City City) //Tengo que pasarle los parametros al metodo put, en este caso un país
         {
             try
             {
-                _context.Update(country);//Le estoy diciendo al metodo que actualice un nuevo país
+                _context.Update(City);//Le estoy diciendo al metodo que actualice un nuevo país
                 await _context.SaveChangesAsync();//Le digo que me devuela el país como quedo actualizado
-                return Ok(country);
+                return Ok(City);
             }
             catch (DbUpdateException DbUpdateException)//Hubo un error en la actualizacion de datos
             {
@@ -76,7 +59,7 @@ namespace Sales.API.Controllers
                 if (DbUpdateException.InnerException!.Message.Contains("duplicate"))
                 {
                     //Le retorno un badrequest pero personalizado
-                    return BadRequest("Ya existe un pais con el mismo nombre");
+                    return BadRequest("Ya existe un Estado con el mismo nombre");
                 }
                 return BadRequest(DbUpdateException.Message);
 
@@ -92,14 +75,14 @@ namespace Sales.API.Controllers
         [HttpPost] //METODO PARA CREAR 
         //Task es el void de los asincronos
         //Action result son todas las respuestas de HTTP
-        public async Task<ActionResult> PostAsync(Country country) //Tengo que pasarle los parametros al metodo post, en este caso un país
+        public async Task<ActionResult> PostAsync(City city) //Tengo que pasarle los parametros al metodo post, en este caso un país
         {
             try
 
             {
-                _context.Add(country);//Le estoy diciendo al metodo que inserte un nuevo país
+                _context.Add(city);//Le estoy diciendo al metodo que inserte un nuevo país
                 await _context.SaveChangesAsync();
-                return Ok(country);//Le digo que me devuela el país como quedo insertado
+                return Ok(city);//Le digo que me devuela el país como quedo insertado
             }
 
             catch (DbUpdateException DbUpdateException)//Hubo un error en la actualizacion de datos
@@ -108,13 +91,14 @@ namespace Sales.API.Controllers
                 if (DbUpdateException.InnerException!.Message.Contains("duplicate"))
                 {
                     //Le retorno un badrequest pero personalizado
-                    return BadRequest("Ya existe un pais con el mismo nombre");
+                    return BadRequest("Ya existe una ciudad con el mismo nombre");
                 }
                 return BadRequest(DbUpdateException.Message);
-                
+
             }
-            catch(Exception ex)//CATCH para capturar si es otro cualquier mensaje de error, capture pero en el objeto ex
-            {return BadRequest(ex.Message);
+            catch (Exception ex)//CATCH para capturar si es otro cualquier mensaje de error, capture pero en el objeto ex
+            {
+                return BadRequest(ex.Message);
             }
         }
 
@@ -123,20 +107,16 @@ namespace Sales.API.Controllers
         [HttpDelete("{id:int}")]//Le pasamos un parámetro al metodo
         public async Task<IActionResult> DeleteAsync(int id)
         {
-            var country = await _context.Countries.FirstOrDefaultAsync(x => x.Id == id);// creo la variable para preguntar si el país existe
+            var City = await _context.Cities.FirstOrDefaultAsync(x => x.Id == id);// creo la variable para preguntar si el país existe
             //Adicional creo una función lambda para preguntar si el id es igual al id que me pasaron como parámetro
-            if (country == null)// Pregunto si el país existe
+            if (City == null)// Pregunto si el país existe
             {
                 return NotFound();
             }
-            _context.Remove(country); //Le estoy diciendo al metodo que elimine el país
+            _context.Remove(City); //Le estoy diciendo al metodo que elimine el estado
             await _context.SaveChangesAsync();
 
-            return NoContent(); //Respuesta para borrar un país
+            return NoContent(); //Respuesta para borrar una ciudad
         }
-
-
-
-
     }
 }

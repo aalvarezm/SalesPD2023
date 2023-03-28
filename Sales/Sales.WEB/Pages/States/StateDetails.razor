@@ -1,0 +1,127 @@
+﻿@inject IRepository repository
+@page "/States/Details/{StateId:int}"
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlertService
+
+
+<h3>Detalles de estado</h3>
+
+
+@if (state is null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <h3>@state.Name</h3>
+    <div class="mb-2">
+        <a class="btn btn-primary" href="/cities/create/@state.Id">Nuevo Ciudad</a> <!--Le envio como parametro padre, el pais al que pertenece ese estado-->
+        <a class="btn btn-success" href="/countries/details/@state.CountryId">Regresar</a>
+    </div>
+
+    <GenericList MyList="state.Cities!.ToList()">
+        <Body>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Ciudad</th>
+                       
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var city in state.Cities!.ToList()!)//Recorro la lista de estados y la muestro en pantalla con los botones de editar y borrar
+                    {
+                        <tr>
+
+                            <td>
+                                @city.Name
+                            </td>
+                            <td>
+
+                                <a class="btn btn-warning" href="/cities/Edit/@city.Id">Editar</a>
+                                <button class="btn btn-danger" @onclick=@(() => DeleteAsync(city.Id))>Borrar</button> <!--Usamos funcion anonima-->
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </Body>
+    </GenericList>
+
+}
+
+
+
+
+
+@code {
+
+    private State? state;
+    
+
+    [Parameter]
+    public int StateId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+
+    }
+
+    private async Task LoadAsync()
+    {
+        //Buscamos el objeto de la clase (en este caso) de la clase City
+        var responseHTTP = await repository.Get<State>($"/api/states/{StateId}"); //Le paso el Id del estado
+        if (responseHTTP.Error)
+        {
+            if (responseHTTP.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+            {
+                NavigationManager.NavigateTo("/countries");
+                return;
+            }
+
+            var message = await responseHTTP.GetErrorMessageAsync();
+            await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+        state = responseHTTP.Response;
+    }
+
+
+
+    private async Task DeleteAsync(int CityId)//Le paso como parametro la ciudad que quiero eliminar
+    {
+        var result = await SweetAlertService.FireAsync(new SweetAlertOptions
+            { //Le mando el objeto SweetAlertOptions
+                Title = "Confirmacion",
+                Text = "Esta seguro que desea eliminar este pais?",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = true,
+                CancelButtonText = "No",
+                ConfirmButtonText = "Si"
+            });
+
+        //Almaceno la confirmacion del usuario
+        var confirm = string.IsNullOrEmpty(result.Value);//Significa que el usuario presiono que no
+        if (confirm)
+        {
+            return;
+        }
+        //Pero si el usuario dice que si
+        var responseHTTP = await repository.Delete($"api/cities/{CityId}");//Este Id es el que se recibe en el parametro del metodo
+        if (responseHTTP.Error)//Si el servidor devolvio un error
+        {
+            if (responseHTTP.HttpResponseMessage.StatusCode != HttpStatusCode.NotFound)//Pregunto si el error es diferente a que la ciudad no existe
+            {
+                var message = await responseHTTP.GetErrorMessageAsync();
+                await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+                return;
+            }
+        }
+
+        await LoadAsync(); //Llamo el metodo para que recargue la pagina apenas elimine el registro
+        //Es importante llamarlo para poder que me cargue la lista nuevamente
+
+
+    }
+}
